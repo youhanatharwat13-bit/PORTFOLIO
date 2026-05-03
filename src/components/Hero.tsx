@@ -14,7 +14,7 @@ export default function Hero() {
           <div className="mb-8 relative w-32 h-32 md:w-40 md:h-40 mx-auto rounded-full overflow-hidden border-2 border-white/20 shadow-[0_0_30px_rgba(255,255,255,0.1)]">
             {/* The user can replace this placeholder with their own image */}
             <img 
-              src="https://images.unsplash.com/photo-1531891437562-4301cf35b7e4?q=80&w=200&auto=format&fit=crop" 
+              src="/profile_picture.webp" 
               alt="Video Editor Portrait"
               className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500" 
             />

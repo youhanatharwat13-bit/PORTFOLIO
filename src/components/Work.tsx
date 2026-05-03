@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { FadeIn } from './UI';
 import { projects } from '../data';
 import { Play, X } from 'lucide-react';
@@ -10,6 +11,11 @@ const ProjectCard = ({ project, index }: any) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleMouseEnter = () => {
     setIsHovered(true);
@@ -28,68 +34,14 @@ const ProjectCard = ({ project, index }: any) => {
 
   const { t } = useLanguage();
 
-  return (
-    <>
-      <motion.div 
-        layout
-        className="relative grid grid-cols-1 md:grid-cols-12 gap-8 items-center cursor-pointer group mb-16 md:mb-32 pl-12 md:pl-0"
-        initial={{ opacity: 0, y: 50 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 20, filter: "blur(5px)" }}
-        viewport={{ once: true, margin: "-20%" }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-        onClick={() => { setIsOpen(true); setIsVideoLoaded(false); }}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-      >
-        {/* Timeline node */}
-        <div className="absolute left-[-5px] md:left-1/2 md:-ml-[5px] w-[10px] h-[10px] bg-white rounded-full z-10 shadow-[0_0_10px_rgba(255,255,255,0.8)] mix-blend-screen group-hover:bg-white group-hover:shadow-[0_0_20px_rgba(255,255,255,0.8)] group-hover:scale-150 transition-all duration-300"></div>
-
-        <div className={`md:col-span-5 ${index % 2 === 0 ? 'md:order-1 md:text-right md:pr-12' : 'md:order-3 md:pl-12'}`}>
-          <div className="text-gray-400 font-mono text-sm mb-2 opacity-80 drop-shadow-md">SEQ_{project.id}</div>
-          <h2 className="text-3xl md:text-5xl font-display font-bold mb-4 group-hover:text-white text-gray-300 transition-colors uppercase">
-            {project.title}
-          </h2>
-          <p className="text-gray-400 font-light mb-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300 hidden md:block uppercase tracking-widest text-xs">
-            {project.category}
-          </p>
-        </div>
-        
-        <div className="md:col-span-2 hidden md:flex justify-center order-2">
-           {/* Center line space occupied by parent's pseudo track */}
-        </div>
-
-        <div 
-          className={`md:col-span-5 relative aspect-video overflow-hidden border border-white/10 bg-gray-900 ${index % 2 === 0 ? 'md:order-3' : 'md:order-1'}`}
-        >
-          <video 
-            ref={videoRef}
-            src={project.videoUrl} 
-            muted 
-            loop 
-            playsInline
-            className={`w-full h-full object-cover transition-transform duration-700 ease-in-out ${isHovered ? 'scale-100' : 'scale-110 grayscale opacity-80'}`}
-          />
-          {/* Letterbox Effect (Top & Bottom Bars) */}
-          <div className={`absolute top-0 left-0 right-0 bg-black transition-all duration-700 ease-in-out z-10 ${isHovered ? 'h-[12%]' : 'h-0'}`}></div>
-          <div className={`absolute bottom-0 left-0 right-0 bg-black transition-all duration-700 ease-in-out z-10 ${isHovered ? 'h-[12%]' : 'h-0'}`}></div>
-          
-          <div className="absolute inset-0 bg-black/40 group-hover:bg-transparent transition-colors duration-300 flex items-center justify-center z-20 pointer-events-none">
-            <div className={`w-16 h-16 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center text-white transition-all duration-300 transform ${isHovered ? 'scale-0 opacity-0' : 'scale-100 opacity-100'}`}>
-              <Play className="ml-1" size={24} />
-            </div>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Modal Overlay */}
-      <AnimatePresence>
+  const modalContent = (
+    <AnimatePresence>
       {isOpen && (
         <motion.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8 bg-black/95 backdrop-blur-lg"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8 bg-black/95 backdrop-blur-lg"
         >
           <button onClick={() => { setIsOpen(false); setIsVideoLoaded(false); }} className="absolute top-6 right-6 text-white hover:text-gray-400 z-50 transition-colors">
             <X size={32} />
@@ -149,7 +101,65 @@ const ProjectCard = ({ project, index }: any) => {
           </motion.div>
         </motion.div>
       )}
-      </AnimatePresence>
+    </AnimatePresence>
+  );
+
+  return (
+    <>
+      <motion.div 
+        layout
+        className="relative grid grid-cols-1 md:grid-cols-12 gap-8 items-center cursor-pointer group mb-16 md:mb-32 pl-12 md:pl-0"
+        initial={{ opacity: 0, y: 50 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 20, filter: "blur(5px)" }}
+        viewport={{ once: true, margin: "-20%" }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        onClick={() => { setIsOpen(true); setIsVideoLoaded(false); }}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
+        {/* Timeline node */}
+        <div className="absolute left-[-5px] md:left-1/2 md:-ml-[5px] w-[10px] h-[10px] bg-white rounded-full z-10 shadow-[0_0_10px_rgba(255,255,255,0.8)] mix-blend-screen group-hover:bg-white group-hover:shadow-[0_0_20px_rgba(255,255,255,0.8)] group-hover:scale-150 transition-all duration-300"></div>
+
+        <div className={`md:col-span-5 ${index % 2 === 0 ? 'md:order-1 md:text-right md:pr-12' : 'md:order-3 md:pl-12'}`}>
+          <div className="text-gray-400 font-mono text-sm mb-2 opacity-80 drop-shadow-md">SEQ_{project.id}</div>
+          <h2 className="text-3xl md:text-5xl font-display font-bold mb-4 group-hover:text-white text-gray-300 transition-colors uppercase">
+            {project.title}
+          </h2>
+          <p className="text-gray-400 font-light mb-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300 hidden md:block uppercase tracking-widest text-xs">
+            {project.category}
+          </p>
+        </div>
+        
+        <div className="md:col-span-2 hidden md:flex justify-center order-2">
+           {/* Center line space occupied by parent's pseudo track */}
+        </div>
+
+        <div 
+          className={`md:col-span-5 relative aspect-video overflow-hidden border border-white/10 bg-gray-900 ${index % 2 === 0 ? 'md:order-3' : 'md:order-1'}`}
+        >
+          <video 
+            ref={videoRef}
+            src={project.videoUrl} 
+            muted 
+            loop 
+            playsInline
+            className={`w-full h-full object-cover transition-transform duration-700 ease-in-out ${isHovered ? 'scale-100' : 'scale-110 grayscale opacity-80'}`}
+          />
+          {/* Letterbox Effect (Top & Bottom Bars) */}
+          <div className={`absolute top-0 left-0 right-0 bg-black transition-all duration-700 ease-in-out z-10 ${isHovered ? 'h-[12%]' : 'h-0'}`}></div>
+          <div className={`absolute bottom-0 left-0 right-0 bg-black transition-all duration-700 ease-in-out z-10 ${isHovered ? 'h-[12%]' : 'h-0'}`}></div>
+          
+          <div className="absolute inset-0 bg-black/40 group-hover:bg-transparent transition-colors duration-300 flex items-center justify-center z-20 pointer-events-none">
+            <div className={`w-16 h-16 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center text-white transition-all duration-300 transform ${isHovered ? 'scale-0 opacity-0' : 'scale-100 opacity-100'}`}>
+              <Play className="ml-1" size={24} />
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Modal Overlay Rendered via Portal to break out of z-index stacking context */}
+      {mounted ? createPortal(modalContent, document.body) : null}
     </>
   );
 }
